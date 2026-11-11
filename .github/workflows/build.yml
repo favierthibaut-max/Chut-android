@@ -28,7 +28,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Chut-apk
-          path: app/build/outputs/apk/release/*.apk
+          path: app/build/outputs/apk/*/release/*.apk
 
       # Sur la branche principale : publie l'APK avec un lien fixe, téléchargeable depuis le téléphone.
       - name: Publier l'APK
@@ -36,9 +36,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp app/build/outputs/apk/release/app-release.apk Chut.apk
+          cp app/build/outputs/apk/complet/release/app-complet-release.apk Chut.apk
+          cp app/build/outputs/apk/lite/release/app-lite-release.apk Chut-lite.apk
           gh release delete latest --yes --cleanup-tag || true
-          gh release create latest Chut.apk \
+          gh release create latest Chut.apk Chut-lite.apk \
             --title "Chut — dernière version" \
-            --notes "APK compilé automatiquement depuis le commit ${GITHUB_SHA::7}." \
+            --notes "APK compilés automatiquement depuis le commit ${GITHUB_SHA::7}. Chut.apk = complet ; Chut-lite.apk = sans accès au journal d'appels." \
             --latest

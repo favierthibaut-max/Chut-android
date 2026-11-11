@@ -221,6 +221,15 @@ class MainActivity : Activity() {
         val status: String, val reason: String, val blocked: Boolean
     )
 
+    /** L'édition « lite » ne déclare pas l'accès au journal d'appels. */
+    private fun callLogDeclared(): Boolean = try {
+        @Suppress("DEPRECATION")
+        packageManager.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS)
+            .requestedPermissions?.contains(Manifest.permission.READ_CALL_LOG) == true
+    } catch (e: Exception) {
+        false
+    }
+
     private fun hasCallLog() =
         checkSelfPermission(Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
 
@@ -291,7 +300,8 @@ class MainActivity : Activity() {
         val container = findViewById<LinearLayout>(R.id.listHistory)
         container.removeAllViews()
         val callLog = hasCallLog()
-        findViewById<Button>(R.id.btnCallLog).visibility = if (callLog) View.GONE else View.VISIBLE
+        findViewById<Button>(R.id.btnCallLog).visibility =
+            if (!callLog && callLogDeclared()) View.VISIBLE else View.GONE
         findViewById<Button>(R.id.btnClear).visibility = if (callLog) View.GONE else View.VISIBLE
 
         val rows = buildRows()
