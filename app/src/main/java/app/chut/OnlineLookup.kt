@@ -28,7 +28,7 @@ object OnlineLookup {
         val store = Store(context)
         readCache(context, e164)?.let { return it }
         val result = try {
-            query(e164, store.phoneBlockToken, timeoutMs, store.onlineAggressive)
+            query(context, e164, store.phoneBlockToken, timeoutMs, store.onlineAggressive)
         } catch (e: Exception) {
             null
         }
@@ -36,18 +36,18 @@ object OnlineLookup {
         return result
     }
 
-    private fun query(e164: String, token: String, timeoutMs: Int, aggressive: Boolean): Result? {
+    private fun query(context: Context, e164: String, token: String, timeoutMs: Int, aggressive: Boolean): Result? {
         val url = URL(BASE + URLEncoder.encode(e164, "UTF-8") + "?format=json")
         val conn = url.openConnection() as HttpURLConnection
         try {
             conn.connectTimeout = timeoutMs / 2
             conn.readTimeout = timeoutMs / 2
             conn.setRequestProperty("Accept", "application/json")
-            conn.setRequestProperty("User-Agent", "Chut-Android/1.1")
+            conn.setRequestProperty("User-Agent", "Chut-Android/1.4")
             if (token.isNotBlank()) conn.setRequestProperty("Authorization", "Bearer ${token.trim()}")
 
             val code = conn.responseCode
-            if (code == HttpURLConnection.HTTP_NOT_FOUND) return Result(false, "PhoneBlock : aucun signalement")
+            if (code == HttpURLConnection.HTTP_NOT_FOUND) return Result(false, context.getString(R.string.pb_none))
             if (code != HttpURLConnection.HTTP_OK) return null
 
             val o = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
@@ -61,11 +61,11 @@ object OnlineLookup {
             val spam = !whiteListed && rating != "A_LEGITIMATE" &&
                 (votes >= minVotes || confidence >= minConfidence)
 
-            val kind = ratingLabel(rating)
+            val kind = ratingLabel(context, rating)
             val label = when {
-                whiteListed || rating == "A_LEGITIMATE" -> "PhoneBlock : numéro jugé fiable"
-                votes == 0 -> "PhoneBlock : aucun signalement"
-                else -> "Signalé $votes fois sur PhoneBlock" + (if (kind != null) " ($kind)" else "")
+                whiteListed || rating == "A_LEGITIMATE" -> context.getString(R.string.pb_trusted)
+                votes == 0 -> context.getString(R.string.pb_none)
+                else -> context.getString(R.string.pb_reported, votes) + (if (kind != null) " ($kind)" else "")
             }
             return Result(spam, label)
         } finally {
@@ -73,15 +73,15 @@ object OnlineLookup {
         }
     }
 
-    private fun ratingLabel(rating: String): String? = when (rating) {
-        "B_MISSED" -> "appel fantôme"
-        "C_PING" -> "ping call"
-        "D_POLL" -> "sondage"
-        "E_ADVERTISING" -> "démarchage"
-        "F_GAMBLE" -> "jeux / loterie"
-        "G_FRAUD" -> "arnaque"
+    private fun ratingLabel(context: Context, rating: String): String? = when (rating) {
+        "B_MISSED" -> R.string.kind_missed
+        "C_PING" -> R.string.kind_ping
+        "D_POLL" -> R.string.kind_poll
+        "E_ADVERTISING" -> R.string.kind_ad
+        "F_GAMBLE" -> R.string.kind_gamble
+        "G_FRAUD" -> R.string.kind_fraud
         else -> null
-    }
+    }?.let { context.getString(it) }
 
     // --- Cache local -------------------------------------------------------
 

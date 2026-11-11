@@ -20,7 +20,8 @@ class Store(context: Context) {
 
     // --- Règles -------------------------------------------------------------
 
-    var blockFrenchTelemarketing: Boolean
+    /** Plages officielles de démarchage (France, Espagne…), quel que soit le pays où l'on se trouve. */
+    var blockOfficialTelemarketing: Boolean
         get() = prefs.getBoolean(K_FR, true)
         set(v) = prefs.edit().putBoolean(K_FR, v).apply()
 

@@ -30,13 +30,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="Activer la protection" />
+            android:text="@string/btn_activate" />
 
         <Button
             android:id="@+id/btnPermissions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Autoriser notifications et contacts" />
+            android:text="@string/btn_permissions" />
 
         <Button
             android:id="@+id/btnExpect"
@@ -47,65 +47,65 @@
         <!-- ======== Mode ======== -->
         <TextView
             style="@style/Section"
-            android:text="Que faire d'un appel indésirable ?" />
+            android:text="@string/sec_mode" />
 
         <Switch
             android:id="@+id/swSilence"
             style="@style/Rule"
-            android:text="Mode doux : l'appel arrive en silence (tu peux encore décrocher). Désactivé = raccroché automatiquement." />
+            android:text="@string/rule_silence" />
 
         <!-- ======== Règles ======== -->
         <TextView
             style="@style/Section"
-            android:text="Ce qui est considéré comme indésirable" />
+            android:text="@string/sec_rules" />
 
         <Switch
-            android:id="@+id/swFr"
+            android:id="@+id/swOfficial"
             style="@style/Rule"
-            android:text="Préfixes de démarchage officiels France (+33 162, 163, 270, 271, 377, 378, 424, 425, 568, 569, 948, 949 et Outre-mer)" />
+            android:text="@string/rule_official" />
 
         <Switch
             android:id="@+id/swSpoof"
             style="@style/Rule"
-            android:text="Numéros signalés comme usurpés par l'opérateur" />
+            android:text="@string/rule_spoof" />
 
         <Switch
             android:id="@+id/swHidden"
             style="@style/Rule"
-            android:text="Numéros masqués" />
+            android:text="@string/rule_hidden" />
 
         <Switch
             android:id="@+id/swStrict"
             style="@style/Rule"
-            android:text="Mode strict : tous les numéros absents de mes contacts" />
+            android:text="@string/rule_strict" />
 
         <Switch
             android:id="@+id/swRepeat"
             style="@style/Rule"
-            android:text="Laisser passer si le même numéro rappelle dans les 3 minutes (urgence)" />
+            android:text="@string/rule_repeat" />
 
         <TextView
             style="@style/Hint"
-            android:text="Tes contacts et ta liste blanche sonnent toujours normalement." />
+            android:text="@string/hint_always" />
 
         <!-- ======== En ligne ======== -->
         <TextView
             style="@style/Section"
-            android:text="Vérification en ligne" />
+            android:text="@string/sec_online" />
 
         <Switch
             android:id="@+id/swOnline"
             style="@style/Rule"
-            android:text="Consulter la base communautaire PhoneBlock pour les numéros inconnus" />
+            android:text="@string/rule_online" />
 
         <Switch
             android:id="@+id/swAggressive"
             style="@style/Rule"
-            android:text="Plus sévère : bloquer dès 1 signalement (sinon à partir de 3)" />
+            android:text="@string/rule_aggressive" />
 
         <TextView
             style="@style/Hint"
-            android:text="Seuls les numéros absents de tes contacts sont envoyés à phoneblock.net. Si la base ne répond pas en 2,5 s, le téléphone sonne normalement." />
+            android:text="@string/hint_online" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -117,29 +117,29 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Clé API PhoneBlock (facultative)"
+                android:hint="@string/hint_token"
                 android:inputType="textPassword" />
 
             <Button
                 android:id="@+id/btnToken"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="OK" />
+                android:text="@string/ok" />
         </LinearLayout>
 
         <!-- ======== Annuaire inversé ======== -->
         <TextView
             style="@style/Section"
-            android:text="Annuaire inversé" />
+            android:text="@string/sec_reverse" />
 
         <Switch
             android:id="@+id/swReverse"
             style="@style/Rule"
-            android:text="Afficher le nom de l'appelant (annuaire tel.search.ch pour la Suisse, Google Maps pour les entreprises de tous pays)" />
+            android:text="@string/rule_reverse" />
 
         <TextView
             style="@style/Hint"
-            android:text="Sans clé Google, la notification propose « Qui est-ce ? » : une recherche web du numéro en un tap." />
+            android:text="@string/hint_reverse_web" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -151,19 +151,19 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Clé tel.search.ch (facultative)"
+                android:hint="@string/hint_searchch"
                 android:inputType="textPassword" />
 
             <Button
                 android:id="@+id/btnSearchKey"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="OK" />
+                android:text="@string/ok" />
         </LinearLayout>
 
         <TextView
             style="@style/Hint"
-            android:text="Clé Google Maps Platform (Places API) : affiche le nom et la note Google des entreprises qui t'appellent. 1 000 recherches gratuites par mois, payant au-delà." />
+            android:text="@string/hint_google_info" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -175,24 +175,24 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Clé Google (facultative)"
+                android:hint="@string/hint_google"
                 android:inputType="textPassword" />
 
             <Button
                 android:id="@+id/btnGoogleKey"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="OK" />
+                android:text="@string/ok" />
         </LinearLayout>
 
         <!-- ======== Liste noire ======== -->
         <TextView
             style="@style/Section"
-            android:text="Ma liste noire" />
+            android:text="@string/sec_black" />
 
         <TextView
             style="@style/Hint"
-            android:text="Un numéro complet, ou un début de numéro au format international pour bloquer toute une plage (ex. +44, +225, +33162)." />
+            android:text="@string/hint_black" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -204,14 +204,14 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Numéro ou préfixe"
+                android:hint="@string/hint_number"
                 android:inputType="phone" />
 
             <Button
                 android:id="@+id/btnAddBlack"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ajouter" />
+                android:text="@string/add" />
         </LinearLayout>
 
         <LinearLayout
@@ -223,7 +223,7 @@
         <!-- ======== Liste blanche ======== -->
         <TextView
             style="@style/Section"
-            android:text="Ma liste blanche (toujours autorisés)" />
+            android:text="@string/sec_white" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -235,14 +235,14 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Numéro ou préfixe"
+                android:hint="@string/hint_number"
                 android:inputType="phone" />
 
             <Button
                 android:id="@+id/btnAddWhite"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ajouter" />
+                android:text="@string/add" />
         </LinearLayout>
 
         <LinearLayout
@@ -254,7 +254,7 @@
         <!-- ======== Tester ======== -->
         <TextView
             style="@style/Section"
-            android:text="Tester un numéro" />
+            android:text="@string/sec_test" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -266,14 +266,14 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="ex. 01 62 12 34 56"
+                android:hint="@string/hint_test"
                 android:inputType="phone" />
 
             <Button
                 android:id="@+id/btnTest"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tester" />
+                android:text="@string/test" />
         </LinearLayout>
 
         <TextView
@@ -296,14 +296,14 @@
                 android:layout_width="0dp"
                 android:layout_marginTop="0dp"
                 android:layout_weight="1"
-                android:text="Appels filtrés" />
+                android:text="@string/sec_history" />
 
             <Button
                 android:id="@+id/btnClear"
                 style="?android:attr/borderlessButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Effacer" />
+                android:text="@string/clear" />
         </LinearLayout>
 
         <LinearLayout

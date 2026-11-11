@@ -4,13 +4,18 @@ Quand un appel indésirable arrive, **le téléphone ne sonne pas** : l'appel es
 automatiquement (ou mis en silence, au choix) et tu reçois seulement une petite notification
 discrète « Appel indésirable bloqué », avec deux boutons : **Pas un spam** et **Rappeler**.
 
-Android 10 ou plus récent. Aucune connexion internet, aucune pub, tout reste sur le téléphone.
+Android 10 ou plus récent, dans tous les pays. Interface en anglais, français, allemand,
+espagnol et italien (selon la langue du téléphone). Les règles locales fonctionnent sans
+internet ; les vérifications en ligne sont facultatives.
+
+Pour ajouter les plages officielles de démarchage d'un autre pays : une ligne dans
+`OFFICIAL_TELEMARKETING` (`SpamRules.kt`).
 
 ## Ce qui est filtré
 
 | Règle | Par défaut |
 |---|---|
-| Préfixes réservés au démarchage en France (+33 162, 163, 270, 271, 377, 378, 424, 425, 568, 569, 948, 949, et 9475 à 9479 pour l'Outre-mer) | ✅ activé |
+| Plages officielles réservées au démarchage, bloquées où que tu sois : France (+33 162, 163, 270, 271, 377, 378, 424, 425, 568, 569, 948, 949, Outre-mer 9475 à 9479) et Espagne (+34 400, depuis le 17 octobre 2026) | ✅ activé |
 | Numéros signalés comme usurpés par l'opérateur (vérification STIR/SHAKEN, si l'opérateur la fournit) | ✅ activé |
 | Ta liste noire (numéros complets ou préfixes, ex. `+44`, `+225`) | ✅ toujours |
 | Numéros masqués | désactivé |

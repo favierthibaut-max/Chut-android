@@ -17,7 +17,7 @@ class NotificationActionReceiver : BroadcastReceiver() {
             ?.cancel(intent.getIntExtra(Notifier.EXTRA_NOTIF_ID, 0))
         Toast.makeText(
             context,
-            "${SpamRules.pretty(number, context)} pourra désormais t'appeler",
+            context.getString(R.string.toast_allowed, SpamRules.pretty(number, context)),
             Toast.LENGTH_SHORT
         ).show()
     }

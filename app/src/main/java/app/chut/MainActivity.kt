@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.text.format.DateFormat
 import android.util.TypedValue
 import android.view.View
 import android.widget.Button
@@ -32,7 +33,7 @@ class MainActivity : Activity() {
         Notifier.ensureChannel(this)
 
         bindSwitch(R.id.swSilence, { store.silenceOnly }) { store.silenceOnly = it }
-        bindSwitch(R.id.swFr, { store.blockFrenchTelemarketing }) { store.blockFrenchTelemarketing = it }
+        bindSwitch(R.id.swOfficial, { store.blockOfficialTelemarketing }) { store.blockOfficialTelemarketing = it }
         bindSwitch(R.id.swSpoof, { store.blockSpoofed }) { store.blockSpoofed = it }
         bindSwitch(R.id.swHidden, { store.blockHidden }) { store.blockHidden = it }
         bindSwitch(R.id.swStrict, { store.blockAllUnknown }) { store.blockAllUnknown = it }
@@ -48,14 +49,14 @@ class MainActivity : Activity() {
         findViewById<Button>(R.id.btnSearchKey).setOnClickListener {
             store.searchChKey = findViewById<EditText>(R.id.etSearchKey).text.toString()
             ReverseLookup.clearCache(this)
-            toast(if (store.searchChKey.isEmpty()) "Clé supprimée" else "Clé enregistrée")
+            toast(getString(if (store.searchChKey.isEmpty()) R.string.key_removed else R.string.key_saved))
         }
 
         findViewById<EditText>(R.id.etGoogleKey).setText(store.googleKey)
         findViewById<Button>(R.id.btnGoogleKey).setOnClickListener {
             store.googleKey = findViewById<EditText>(R.id.etGoogleKey).text.toString()
             ReverseLookup.clearCache(this)
-            toast(if (store.googleKey.isEmpty()) "Clé supprimée" else "Clé enregistrée")
+            toast(getString(if (store.googleKey.isEmpty()) R.string.key_removed else R.string.key_saved))
         }
 
         findViewById<Button>(R.id.btnExpect).setOnClickListener {
@@ -68,7 +69,7 @@ class MainActivity : Activity() {
         findViewById<Button>(R.id.btnToken).setOnClickListener {
             store.phoneBlockToken = findViewById<EditText>(R.id.etToken).text.toString()
             OnlineLookup.clearCache(this)
-            toast(if (store.phoneBlockToken.isEmpty()) "Clé supprimée" else "Clé enregistrée")
+            toast(getString(if (store.phoneBlockToken.isEmpty()) R.string.key_removed else R.string.key_saved))
         }
 
         findViewById<Button>(R.id.btnActivate).setOnClickListener { requestScreeningRole() }
@@ -85,9 +86,9 @@ class MainActivity : Activity() {
 
         findViewById<Button>(R.id.btnClear).setOnClickListener {
             AlertDialog.Builder(this)
-                .setMessage("Effacer l'historique des appels filtrés ?")
-                .setPositiveButton("Effacer") { _, _ -> store.clearHistory(); refresh() }
-                .setNegativeButton("Annuler", null)
+                .setMessage(R.string.clear_history_q)
+                .setPositiveButton(R.string.clear) { _, _ -> store.clearHistory(); refresh() }
+                .setNegativeButton(R.string.cancel, null)
                 .show()
         }
     }
@@ -117,7 +118,7 @@ class MainActivity : Activity() {
         if (rm == null || !rm.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING)) {
             Toast.makeText(
                 this,
-                "Ton téléphone ne propose pas le filtrage d'appels pour les applis tierces.",
+                R.string.role_unavailable,
                 Toast.LENGTH_LONG
             ).show()
             return
@@ -137,7 +138,7 @@ class MainActivity : Activity() {
             if (hasRole()) requestMissingPermissions()
             else Toast.makeText(
                 this,
-                "Choisis « Chut » comme appli d'identification de l'appelant et anti-spam.",
+                R.string.role_denied,
                 Toast.LENGTH_LONG
             ).show()
             refresh()
@@ -156,31 +157,29 @@ class MainActivity : Activity() {
         val missing = missingPermissions()
 
         findViewById<TextView>(R.id.tvStatus).apply {
-            text = if (active) "🛡️ Protection active" else "⚠️ Protection inactive"
+            text = getString(if (active) R.string.status_active else R.string.status_inactive)
             setTextColor(getColor(if (active) R.color.ok else R.color.ko))
         }
-        findViewById<TextView>(R.id.tvStatusDetail).text = when {
-            !active -> "Appuie sur « Activer la protection » et choisis Chut comme appli anti-spam."
-            missing.contains(Manifest.permission.POST_NOTIFICATIONS) ->
-                "Les appels sont filtrés, mais sans notification : autorise-les ci-dessous."
-            missing.contains(Manifest.permission.READ_CONTACTS) ->
-                "Autorise l'accès aux contacts pour être sûr qu'ils ne soient jamais filtrés."
-            else -> "Les appels indésirables ne sonneront plus. Tu recevras juste une notification discrète."
-        }
+        findViewById<TextView>(R.id.tvStatusDetail).setText(when {
+            !active -> R.string.detail_inactive
+            missing.contains(Manifest.permission.POST_NOTIFICATIONS) -> R.string.detail_no_notif
+            missing.contains(Manifest.permission.READ_CONTACTS) -> R.string.detail_no_contacts
+            else -> R.string.detail_ok
+        })
         findViewById<Button>(R.id.btnActivate).visibility = if (active) View.GONE else View.VISIBLE
         findViewById<Button>(R.id.btnPermissions).visibility =
             if (active && missing.isNotEmpty()) View.VISIBLE else View.GONE
 
         findViewById<Button>(R.id.btnExpect).text =
             if (store.isExpectingCall())
-                "⏳ Tout sonne jusqu'à ${SimpleDateFormat("HH:mm", Locale.FRANCE).format(Date(store.expectingCallUntil))} — arrêter"
-            else "J'attends un appel important (tout laisser sonner 2 h)"
+                getString(R.string.expect_on, DateFormat.getTimeFormat(this).format(Date(store.expectingCallUntil)))
+            else getString(R.string.expect_off)
 
         renderList(R.id.listBlack, store.blacklist) { entry ->
-            confirm("Retirer $entry de la liste noire ?") { store.removeFromBlacklist(entry) }
+            confirm(getString(R.string.remove_black_q, entry)) { store.removeFromBlacklist(entry) }
         }
         renderList(R.id.listWhite, store.whitelist) { entry ->
-            confirm("Retirer $entry de la liste blanche ?") { store.removeFromWhitelist(entry) }
+            confirm(getString(R.string.remove_white_q, entry)) { store.removeFromWhitelist(entry) }
         }
         renderHistory()
     }
@@ -191,7 +190,7 @@ class MainActivity : Activity() {
         val edit = findViewById<EditText>(editId)
         val value = SpamRules.clean(edit.text.toString())
         if (value.isEmpty() || value == "+") {
-            Toast.makeText(this, "Entre un numéro ou un préfixe", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.enter_number, Toast.LENGTH_SHORT).show()
             return
         }
         add(value)
@@ -203,7 +202,7 @@ class MainActivity : Activity() {
         val container = findViewById<LinearLayout>(containerId)
         container.removeAllViews()
         if (entries.isEmpty()) {
-            container.addView(row("Aucun numéro", dim = true, onClick = null))
+            container.addView(row(getString(R.string.no_numbers), dim = true, onClick = null))
             return
         }
         entries.forEach { entry ->
@@ -216,14 +215,16 @@ class MainActivity : Activity() {
         container.removeAllViews()
         val items = store.history().take(50)
         if (items.isEmpty()) {
-            container.addView(row("Aucun appel filtré pour l'instant", dim = true, onClick = null))
+            container.addView(row(getString(R.string.no_history), dim = true, onClick = null))
             return
         }
-        val fmt = SimpleDateFormat("EEE d MMM, HH:mm", Locale.FRANCE)
+        val fmt = SimpleDateFormat(
+            DateFormat.getBestDateTimePattern(Locale.getDefault(), "EEEdMMMjjmm"), Locale.getDefault()
+        )
         items.forEach { h ->
             val label = if (h.name.isEmpty()) SpamRules.pretty(h.number, this)
             else "${h.name} (${SpamRules.pretty(h.number, this)})"
-            val action = if (h.silenced) "mis en silence" else "bloqué"
+            val action = getString(if (h.silenced) R.string.action_silenced else R.string.action_blocked)
             val text = "$label\n${fmt.format(Date(h.time))} · $action · ${h.reason}"
             container.addView(row(text, onClick = { historyMenu(h) }))
         }
@@ -234,12 +235,15 @@ class MainActivity : Activity() {
         val label = SpamRules.pretty(h.number, this)
         AlertDialog.Builder(this)
             .setTitle(label)
-            .setItems(arrayOf("Ce n'est pas un spam (autoriser)", "Toujours bloquer ce numéro", "Rappeler", "Qui est-ce ? (recherche web)")) { _, which ->
+            .setItems(arrayOf(
+                getString(R.string.menu_not_spam), getString(R.string.menu_always_block),
+                getString(R.string.call_back), getString(R.string.menu_who)
+            )) { _, which ->
                 when (which) {
-                    0 -> { store.addToWhitelist(h.number); toast("$label est autorisé") }
-                    1 -> { store.addToBlacklist(h.number); toast("$label ajouté à la liste noire") }
+                    0 -> { store.addToWhitelist(h.number); toast(getString(R.string.toast_allowed, label)) }
+                    1 -> { store.addToBlacklist(h.number); toast(getString(R.string.toast_blocked, label)) }
                     2 -> startActivity(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", h.number, null)))
-                    3 -> startActivity(Intent(Intent.ACTION_VIEW, ReverseLookup.webSearchUri(h.number)))
+                    3 -> startActivity(Intent(Intent.ACTION_VIEW, ReverseLookup.webSearchUri(this, h.number)))
                 }
                 refresh()
             }
@@ -257,7 +261,7 @@ class MainActivity : Activity() {
             showTest(local.block, local.reason)
             return
         }
-        showTest(null, "Vérification en ligne…")
+        showTest(null, getString(R.string.checking_online))
         Thread {
             // Pas de limite serrée ici : on n'est pas pendant un vrai appel.
             val online = if (needOnline) OnlineLookup.check(this, local.number, timeoutMs = 8000) else null
@@ -265,11 +269,11 @@ class MainActivity : Activity() {
             val block = (online != null && online.spam) || local.block
             var reason = when {
                 online != null && online.spam -> online.label
-                needOnline && online == null -> "base en ligne injoignable"
+                needOnline && online == null -> getString(R.string.online_unreachable)
                 online != null -> online.label
                 else -> local.reason
             }
-            if (who != null) reason += "\n👤 ${who.display()}"
+            if (who != null) reason += "\n👤 ${who.display(this)}"
             runOnUiThread { showTest(block, reason) }
         }.start()
     }
@@ -278,8 +282,8 @@ class MainActivity : Activity() {
         findViewById<TextView>(R.id.tvTest).apply {
             text = when (block) {
                 null -> reason
-                true -> "🚫 Ne sonnera pas — $reason"
-                false -> "✅ Sonnera normalement — $reason"
+                true -> getString(R.string.test_block, reason)
+                false -> getString(R.string.test_ring, reason)
             }
             setTextColor(getColor(if (block == true) R.color.ko else R.color.ok))
         }
@@ -311,8 +315,8 @@ class MainActivity : Activity() {
     private fun confirm(message: String, action: () -> Unit) {
         AlertDialog.Builder(this)
             .setMessage(message)
-            .setPositiveButton("Oui") { _, _ -> action(); refresh() }
-            .setNegativeButton("Non", null)
+            .setPositiveButton(R.string.yes) { _, _ -> action(); refresh() }
+            .setNegativeButton(R.string.no, null)
             .show()
     }
 

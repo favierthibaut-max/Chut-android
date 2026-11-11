@@ -78,7 +78,7 @@ class SpamScreeningService : CallScreeningService() {
         val time = System.currentTimeMillis()
         Thread {
             val name = if (verdict.number.isEmpty()) "" else
-                ReverseLookup.identify(this, verdict.number)?.display().orEmpty()
+                ReverseLookup.identify(this, verdict.number)?.display(this).orEmpty()
             store.addHistory(HistoryEntry(time, verdict.number, verdict.reason, silenceOnly, name))
             Notifier.notifyFiltered(this, verdict.number, verdict.reason, silenceOnly, name)
         }.start()

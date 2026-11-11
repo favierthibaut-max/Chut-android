@@ -22,13 +22,26 @@ data class Verdict(
 object SpamRules {
 
     /**
-     * Plages réservées par l'Arcep au démarchage commercial (depuis 2023).
-     * Après l'indicatif +33 : 0162, 0163, 0270… en métropole, 09475 à 09479 en Outre-mer.
+     * Plages de numéros que la loi réserve au démarchage commercial, par indicatif pays.
+     * Elles sont bloquées où que l'utilisateur se trouve (un démarcheur français peut appeler
+     * un téléphone suisse). Pour ajouter un pays : une ligne ici, avec son code ISO.
+     *
+     * - France (Arcep, depuis 2023) : 0162, 0163, 0270… en métropole ; 09475 à 09479 en Outre-mer.
+     * - Espagne (depuis le 17 octobre 2026) : numéros à 9 chiffres commençant par 400.
      */
-    private val FR_TELEMARKETING = listOf(
-        "162", "163", "270", "271", "377", "378",
-        "424", "425", "568", "569", "948", "949",
-        "9475", "9476", "9477", "9478", "9479"
+    private data class OfficialRange(val countryCode: String, val iso: String, val prefixes: List<String>)
+
+    private val OFFICIAL_TELEMARKETING = listOf(
+        OfficialRange("+33", "FR", listOf(
+            "162", "163", "270", "271", "377", "378",
+            "424", "425", "568", "569", "948", "949",
+            "9475", "9476", "9477", "9478", "9479"
+        )),
+        OfficialRange("+590", "GP", listOf("9475")), // Guadeloupe, Saint-Martin, Saint-Barthélemy
+        OfficialRange("+594", "GF", listOf("9476")), // Guyane
+        OfficialRange("+596", "MQ", listOf("9477")), // Martinique
+        OfficialRange("+262", "RE", listOf("9478", "9479")), // La Réunion, Mayotte
+        OfficialRange("+34", "ES", listOf("400"))
     )
 
     fun evaluate(
@@ -46,43 +59,50 @@ object SpamRules {
 
         // 1. Numéro masqué / inconnu
         if (hidden || raw.isEmpty()) {
-            return if (store.blockHidden && !expecting) Verdict(true, "Numéro masqué", "")
-            else Verdict(false, "Numéro masqué (autorisé dans les réglages)", "")
+            return if (store.blockHidden && !expecting) Verdict(true, context.getString(R.string.r_hidden), "")
+            else Verdict(false, context.getString(R.string.r_hidden_allowed), "")
         }
 
         val number = toE164(raw, iso)
 
         // 2. Ce qui passe toujours
         if (store.whitelist.any { matches(it, raw, number, iso) })
-            return Verdict(false, "Dans ta liste blanche", number)
+            return Verdict(false, context.getString(R.string.r_white), number)
         if (isInContacts(context, rawNumber!!))
-            return Verdict(false, "Dans tes contacts", number, contact = true)
+            return Verdict(false, context.getString(R.string.r_contact), number, contact = true)
 
         // 3. Ta liste noire passe avant tout le reste
         if (store.blacklist.any { matches(it, raw, number, iso) })
-            return Verdict(true, "Dans ta liste noire", number)
+            return Verdict(true, context.getString(R.string.r_black), number)
 
         // 4. Mode « J'attends un appel » : tout le reste sonne
         if (expecting)
-            return Verdict(false, "Mode « J'attends un appel » actif", number)
+            return Verdict(false, context.getString(R.string.r_expect), number)
 
         // 5. Exception "appel insistant" (urgence possible)
         if (store.allowRepeated && store.filteredRecently(number, now))
-            return Verdict(false, "A rappelé dans les 3 minutes : laissé passer", number)
+            return Verdict(false, context.getString(R.string.r_repeat), number)
 
         // 6. Règles automatiques
-        if (store.blockFrenchTelemarketing && isFrenchTelemarketing(number))
-            return Verdict(true, "Préfixe réservé au démarchage", number)
+        if (store.blockOfficialTelemarketing) {
+            officialTelemarketingCountry(number)?.let { iso ->
+                val country = Locale("", iso).displayCountry
+                return Verdict(true, context.getString(R.string.r_official, country), number)
+            }
+        }
         if (store.blockSpoofed && spoofed)
-            return Verdict(true, "Numéro usurpé (selon l'opérateur)", number)
+            return Verdict(true, context.getString(R.string.r_spoof), number)
         if (store.blockAllUnknown)
-            return Verdict(true, "Numéro inconnu (mode strict)", number)
+            return Verdict(true, context.getString(R.string.r_strict), number)
 
-        return Verdict(false, "Aucune règle ne correspond", number, definitive = false)
+        return Verdict(false, context.getString(R.string.r_none), number, definitive = false)
     }
 
-    fun isFrenchTelemarketing(e164: String): Boolean =
-        e164.startsWith("+33") && FR_TELEMARKETING.any { e164.startsWith("+33$it") }
+    /** Code ISO du pays si ce numéro est dans une plage officielle de démarchage, sinon null. */
+    fun officialTelemarketingCountry(e164: String): String? =
+        OFFICIAL_TELEMARKETING.firstOrNull { r ->
+            e164.startsWith(r.countryCode) && r.prefixes.any { e164.startsWith(r.countryCode + it) }
+        }?.iso
 
     /** Une entrée de liste correspond-elle à ce numéro ? Gère numéros complets et préfixes. */
     fun matches(entry: String, raw: String, e164: String, iso: String): Boolean {
@@ -116,7 +136,7 @@ object SpamRules {
     }
 
     fun pretty(number: String, context: Context): String {
-        if (number.isEmpty()) return "Numéro masqué"
+        if (number.isEmpty()) return context.getString(R.string.r_hidden)
         return try {
             PhoneNumberUtils.formatNumber(number, countryIso(context)) ?: number
         } catch (e: Exception) {
@@ -126,8 +146,10 @@ object SpamRules {
 
     fun countryIso(context: Context): String {
         val tm = context.getSystemService(TelephonyManager::class.java)
-        val iso = tm?.networkCountryIso?.takeIf { it.isNotBlank() }
-            ?: tm?.simCountryIso?.takeIf { it.isNotBlank() }
+        // Pays de la carte SIM d'abord : c'est le format dans lequel l'utilisateur saisit ses numéros,
+        // et il ne change pas en voyage (en itinérance, les appels arrivent au format international).
+        val iso = tm?.simCountryIso?.takeIf { it.isNotBlank() }
+            ?: tm?.networkCountryIso?.takeIf { it.isNotBlank() }
             ?: Locale.getDefault().country
         return iso.uppercase(Locale.ROOT)
     }

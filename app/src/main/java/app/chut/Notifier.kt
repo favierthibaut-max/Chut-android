@@ -25,10 +25,10 @@ object Notifier {
         if (nm.getNotificationChannel(CHANNEL_ID) != null) return
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Appels filtrés",
+            context.getString(R.string.sec_history),
             NotificationManager.IMPORTANCE_LOW // pas de son, pas de pop-up : juste dans le volet
         ).apply {
-            description = "Une notification discrète quand un appel indésirable est filtré"
+            description = context.getString(R.string.ch_filtered_desc)
             setShowBadge(true)
         }
         nm.createNotificationChannel(channel)
@@ -39,10 +39,10 @@ object Notifier {
         if (nm.getNotificationChannel(CHANNEL_CALLER) != null) return
         val channel = NotificationChannel(
             CHANNEL_CALLER,
-            "Qui appelle ?",
+            context.getString(R.string.ch_caller),
             NotificationManager.IMPORTANCE_HIGH // s'affiche en haut de l'écran pendant la sonnerie
         ).apply {
-            description = "Nom trouvé dans l'annuaire inversé pendant qu'un numéro inconnu sonne"
+            description = context.getString(R.string.ch_caller_desc)
             setSound(null, null) // la sonnerie de l'appel suffit
             enableVibration(false)
         }
@@ -61,8 +61,8 @@ object Notifier {
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
         val n = Notification.Builder(context, CHANNEL_CALLER)
             .setSmallIcon(R.drawable.ic_stat_shield)
-            .setContentTitle("Qui appelle ? ${who.name}")
-            .setContentText(listOf(who.place, who.ratingText(), SpamRules.pretty(number, context)).filter { it.isNotEmpty() }.joinToString(" · "))
+            .setContentTitle(context.getString(R.string.n_caller_title, who.name))
+            .setContentText(listOf(who.place, who.ratingText(context), SpamRules.pretty(number, context)).filter { it.isNotEmpty() }.joinToString(" · "))
             .setCategory(Notification.CATEGORY_CALL)
             .setTimeoutAfter(90_000)
             .setAutoCancel(true)
@@ -89,7 +89,7 @@ object Notifier {
 
         val builder = Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_shield)
-            .setContentTitle(if (silenced) "Appel indésirable mis en silence" else "Appel indésirable bloqué")
+            .setContentTitle(context.getString(if (silenced) R.string.n_silenced else R.string.n_blocked))
             .setContentText(
                 if (name.isEmpty()) "${SpamRules.pretty(number, context)} · $reason"
                 else "$name · $reason"
@@ -115,16 +115,16 @@ object Notifier {
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                 flags
             )
-            builder.addAction(Notification.Action.Builder(null as Icon?, "Pas un spam", notSpam).build())
-            builder.addAction(Notification.Action.Builder(null as Icon?, "Rappeler", callBack).build())
+            builder.addAction(Notification.Action.Builder(null as Icon?, context.getString(R.string.n_not_spam), notSpam).build())
+            builder.addAction(Notification.Action.Builder(null as Icon?, context.getString(R.string.call_back), callBack).build())
             if (name.isEmpty()) {
                 val who = PendingIntent.getActivity(
                     context, id + 2,
-                    Intent(Intent.ACTION_VIEW, ReverseLookup.webSearchUri(number))
+                    Intent(Intent.ACTION_VIEW, ReverseLookup.webSearchUri(context, number))
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                     flags
                 )
-                builder.addAction(Notification.Action.Builder(null as Icon?, "Qui est-ce ?", who).build())
+                builder.addAction(Notification.Action.Builder(null as Icon?, context.getString(R.string.n_who), who).build())
             }
         }
 

@@ -27,12 +27,13 @@ object ReverseLookup {
         val rating: Double? = null,     // note Google sur 5
         val ratingCount: Int = 0
     ) {
-        fun ratingText(): String =
-            if (rating == null) "" else
-                "★ " + String.format(Locale.FRANCE, "%.1f", rating) + " ($ratingCount avis Google)"
+        fun ratingText(context: Context): String =
+            if (rating == null) "" else context.getString(
+                R.string.rating_google, String.format(Locale.getDefault(), "%.1f", rating), ratingCount
+            )
 
-        fun display(): String =
-            listOf(name, place, ratingText()).filter { it.isNotEmpty() }.joinToString(" · ")
+        fun display(context: Context): String =
+            listOf(name, place, ratingText(context)).filter { it.isNotEmpty() }.joinToString(" · ")
     }
 
     private const val SEARCH_CH = "https://search.ch/tel/api/"
@@ -87,14 +88,14 @@ object ReverseLookup {
     private fun querySearchCh(e164: String, key: String, timeoutMs: Int): Identity? {
         val sb = StringBuilder(SEARCH_CH)
             .append("?was=").append(URLEncoder.encode(e164, "UTF-8"))
-            .append("&maxnum=1&lang=fr")
+            .append("&maxnum=1&lang=").append(searchChLang())
         if (key.isNotBlank()) sb.append("&key=").append(URLEncoder.encode(key.trim(), "UTF-8"))
 
         val conn = URL(sb.toString()).openConnection() as HttpURLConnection
         try {
             conn.connectTimeout = timeoutMs / 2
             conn.readTimeout = timeoutMs / 2
-            conn.setRequestProperty("User-Agent", "Chut-Android/1.3")
+            conn.setRequestProperty("User-Agent", "Chut-Android/1.4")
             if (conn.responseCode != HttpURLConnection.HTTP_OK) throw IllegalStateException("HTTP ${conn.responseCode}")
 
             conn.inputStream.use { input ->
@@ -144,7 +145,8 @@ object ReverseLookup {
                 "places.displayName,places.formattedAddress,places.rating," +
                     "places.userRatingCount,places.internationalPhoneNumber"
             )
-            val body = JSONObject().put("textQuery", e164).put("languageCode", "fr").toString()
+            val body = JSONObject().put("textQuery", e164)
+                .put("languageCode", Locale.getDefault().language).toString()
             conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
 
             if (conn.responseCode != HttpURLConnection.HTTP_OK) throw IllegalStateException("HTTP ${conn.responseCode}")
@@ -183,8 +185,15 @@ object ReverseLookup {
     // --- Recherche web ------------------------------------------------------
 
     /** Lien de recherche web, pour les numéros qu'aucun annuaire ne couvre. */
-    fun webSearchUri(e164: String): Uri =
-        Uri.parse("https://www.google.com/search?q=" + URLEncoder.encode("\"$e164\" qui appelle", "UTF-8"))
+    fun webSearchUri(context: Context, e164: String): Uri =
+        Uri.parse(
+            "https://www.google.com/search?q=" +
+                URLEncoder.encode(context.getString(R.string.web_query, e164), "UTF-8")
+        )
+
+    /** tel.search.ch répond en de, fr, it ou en. */
+    private fun searchChLang(): String =
+        Locale.getDefault().language.takeIf { it in setOf("de", "fr", "it", "en") } ?: "en"
 
     // --- Cache local -------------------------------------------------------
 
