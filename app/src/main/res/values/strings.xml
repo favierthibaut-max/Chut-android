@@ -40,11 +40,14 @@
     <string name="sec_test">Test a number</string>
     <string name="hint_test">e.g. +33 1 62 12 34 56</string>
     <string name="test">Test</string>
-    <string name="sec_history">Filtered calls</string>
+    <string name="sec_history">Calls from unknown numbers</string>
+    <string name="ch_filtered">Filtered calls</string>
+    <string name="action_rang">rang</string>
+    <string name="hint_history">Every call from a number that isn\'t in your contacts, blocked or not. Tap a call for options.</string>
     <string name="clear">Clear</string>
     <string name="key_saved">Key saved</string>
     <string name="key_removed">Key removed</string>
-    <string name="clear_history_q">Clear the history of filtered calls?</string>
+    <string name="clear_history_q">Clear the call history?</string>
     <string name="cancel">Cancel</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
@@ -54,7 +57,7 @@
     <string name="remove_white_q">Remove %1$s from the allow list?</string>
     <string name="enter_number">Enter a number or a prefix</string>
     <string name="no_numbers">No numbers</string>
-    <string name="no_history">No filtered calls yet</string>
+    <string name="no_history">No calls from unknown numbers yet</string>
     <string name="action_silenced">silenced</string>
     <string name="action_blocked">blocked</string>
     <string name="menu_not_spam">Not spam (allow)</string>

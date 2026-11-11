@@ -37,7 +37,11 @@ class SpamScreeningService : CallScreeningService() {
         if (!verdict.definitive && store.onlineLookup && verdict.number.isNotEmpty()) {
             Thread {
                 val online = OnlineLookup.check(this, verdict.number)
-                val finalVerdict = if (online?.spam == true) Verdict(true, online.label, verdict.number) else verdict
+                val finalVerdict = when {
+                    online == null -> verdict
+                    online.spam -> Verdict(true, online.label, verdict.number)
+                    else -> verdict.copy(reason = online.label) // ex. « PhoneBlock : aucun signalement »
+                }
                 finish(callDetails, finalVerdict, store)
             }.start()
             return
@@ -48,14 +52,18 @@ class SpamScreeningService : CallScreeningService() {
     private fun finish(callDetails: Call.Details, verdict: Verdict, store: Store) {
         if (!verdict.block) {
             respondToCall(callDetails, CallResponse.Builder().build())
-            // Le téléphone sonne : on cherche en parallèle qui appelle, pour l'afficher.
-            if (!verdict.contact && ReverseLookup.supports(this, verdict.number)) {
-                Thread {
-                    ReverseLookup.identify(this, verdict.number)?.let {
-                        Notifier.notifyCallerId(this, verdict.number, it)
-                    }
-                }.start()
-            }
+            if (verdict.contact) return // les contacts ont déjà un nom, inutile de les enregistrer
+            // Le téléphone sonne : on cherche en parallèle qui appelle, pour l'afficher
+            // tout de suite, puis on garde l'appel dans l'historique.
+            val time = System.currentTimeMillis()
+            Thread {
+                val who = if (ReverseLookup.supports(this, verdict.number))
+                    ReverseLookup.identify(this, verdict.number) else null
+                if (who != null) Notifier.notifyCallerId(this, verdict.number, who)
+                store.addHistory(
+                    HistoryEntry(time, verdict.number, verdict.reason, false, who?.display(this).orEmpty(), rang = true)
+                )
+            }.start()
             return
         }
 

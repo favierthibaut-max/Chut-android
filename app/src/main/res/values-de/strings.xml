@@ -39,11 +39,14 @@
     <string name="sec_test">Nummer testen</string>
     <string name="hint_test">z. B. +33 1 62 12 34 56</string>
     <string name="test">Testen</string>
-    <string name="sec_history">Gefilterte Anrufe</string>
+    <string name="sec_history">Anrufe von unbekannten Nummern</string>
+    <string name="ch_filtered">Gefilterte Anrufe</string>
+    <string name="action_rang">hat geklingelt</string>
+    <string name="hint_history">Alle Anrufe von Nummern, die nicht in deinen Kontakten sind, blockiert oder nicht. Tippe auf einen Anruf für Optionen.</string>
     <string name="clear">Löschen</string>
     <string name="key_saved">Schlüssel gespeichert</string>
     <string name="key_removed">Schlüssel entfernt</string>
-    <string name="clear_history_q">Verlauf der gefilterten Anrufe löschen?</string>
+    <string name="clear_history_q">Anrufverlauf löschen?</string>
     <string name="cancel">Abbrechen</string>
     <string name="yes">Ja</string>
     <string name="no">Nein</string>
@@ -53,7 +56,7 @@
     <string name="remove_white_q">%1$s von der Erlaubt-Liste entfernen?</string>
     <string name="enter_number">Gib eine Nummer oder Vorwahl ein</string>
     <string name="no_numbers">Keine Nummern</string>
-    <string name="no_history">Noch keine gefilterten Anrufe</string>
+    <string name="no_history">Noch keine Anrufe von unbekannten Nummern</string>
     <string name="action_silenced">stummgeschaltet</string>
     <string name="action_blocked">blockiert</string>
     <string name="menu_not_spam">Kein Spam (erlauben)</string>

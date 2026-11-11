@@ -224,8 +224,13 @@ class MainActivity : Activity() {
         items.forEach { h ->
             val label = if (h.name.isEmpty()) SpamRules.pretty(h.number, this)
             else "${h.name} (${SpamRules.pretty(h.number, this)})"
-            val action = getString(if (h.silenced) R.string.action_silenced else R.string.action_blocked)
-            val text = "$label\n${fmt.format(Date(h.time))} · $action · ${h.reason}"
+            val action = getString(when {
+                h.rang -> R.string.action_rang
+                h.silenced -> R.string.action_silenced
+                else -> R.string.action_blocked
+            })
+            val icon = if (h.rang) "📞" else "🚫"
+            val text = "$icon $label\n${fmt.format(Date(h.time))} · $action · ${h.reason}"
             container.addView(row(text, onClick = { historyMenu(h) }))
         }
     }

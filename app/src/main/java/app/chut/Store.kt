@@ -9,7 +9,8 @@ data class HistoryEntry(
     val number: String,   // numéro normalisé (E.164 si possible), vide si masqué
     val reason: String,
     val silenced: Boolean, // true = mis en silence, false = raccroché
-    val name: String = ""  // nom trouvé dans l'annuaire inversé, s'il y en a un
+    val name: String = "",  // nom trouvé dans l'annuaire inversé, s'il y en a un
+    val rang: Boolean = false // true = l'appel a sonné normalement (non filtré)
 )
 
 /** Réglages, listes noire/blanche et historique, stockés localement sur le téléphone. */
@@ -115,7 +116,7 @@ class Store(context: Context) {
             val arr = JSONArray(raw)
             (0 until arr.length()).map { i ->
                 val o = arr.getJSONObject(i)
-                HistoryEntry(o.getLong("t"), o.getString("n"), o.getString("r"), o.optBoolean("s"), o.optString("nm", ""))
+                HistoryEntry(o.getLong("t"), o.getString("n"), o.getString("r"), o.optBoolean("s"), o.optString("nm", ""), o.optBoolean("a", false))
             }
         } catch (e: Exception) {
             emptyList()
@@ -132,6 +133,7 @@ class Store(context: Context) {
                     .put("r", e.reason)
                     .put("s", e.silenced)
                     .put("nm", e.name)
+                    .put("a", e.rang)
             )
         }
         prefs.edit().putString(K_HISTORY, arr.toString()).apply()
@@ -141,7 +143,7 @@ class Store(context: Context) {
 
     /** Ce numéro a-t-il déjà été filtré dans les dernières minutes ? */
     fun filteredRecently(number: String, now: Long, windowMs: Long = 3 * 60_000L): Boolean =
-        number.isNotEmpty() && history().any { it.number == number && now - it.time in 0..windowMs }
+        number.isNotEmpty() && history().any { !it.rang && it.number == number && now - it.time in 0..windowMs }
 
     companion object {
         private const val K_FR = "rule_fr_telemarketing"

@@ -25,7 +25,7 @@ object Notifier {
         if (nm.getNotificationChannel(CHANNEL_ID) != null) return
         val channel = NotificationChannel(
             CHANNEL_ID,
-            context.getString(R.string.sec_history),
+            context.getString(R.string.ch_filtered),
             NotificationManager.IMPORTANCE_LOW // pas de son, pas de pop-up : juste dans le volet
         ).apply {
             description = context.getString(R.string.ch_filtered_desc)

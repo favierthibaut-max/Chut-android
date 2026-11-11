@@ -39,11 +39,14 @@
     <string name="sec_test">Tester un numéro</string>
     <string name="hint_test">ex. +33 1 62 12 34 56</string>
     <string name="test">Tester</string>
-    <string name="sec_history">Appels filtrés</string>
+    <string name="sec_history">Appels de numéros inconnus</string>
+    <string name="ch_filtered">Appels filtrés</string>
+    <string name="action_rang">a sonné</string>
+    <string name="hint_history">Tous les appels de numéros absents de tes contacts, bloqués ou non. Touche un appel pour les options.</string>
     <string name="clear">Effacer</string>
     <string name="key_saved">Clé enregistrée</string>
     <string name="key_removed">Clé supprimée</string>
-    <string name="clear_history_q">Effacer l\'historique des appels filtrés ?</string>
+    <string name="clear_history_q">Effacer l\'historique des appels ?</string>
     <string name="cancel">Annuler</string>
     <string name="yes">Oui</string>
     <string name="no">Non</string>
@@ -53,7 +56,7 @@
     <string name="remove_white_q">Retirer %1$s de la liste blanche ?</string>
     <string name="enter_number">Entre un numéro ou un préfixe</string>
     <string name="no_numbers">Aucun numéro</string>
-    <string name="no_history">Aucun appel filtré pour l\'instant</string>
+    <string name="no_history">Aucun appel de numéro inconnu pour l\'instant</string>
     <string name="action_silenced">mis en silence</string>
     <string name="action_blocked">bloqué</string>
     <string name="menu_not_spam">Ce n\'est pas un spam (autoriser)</string>
