@@ -114,6 +114,47 @@ object SpamRules {
         return entryE164.startsWith("+") && entryE164 == e164
     }
 
+    // --- Indicatifs pays -------------------------------------------------------
+
+    /** Indicatifs à 2 chiffres (plan de l'UIT) ; 1 et 7 font 1 chiffre, tous les autres 3. */
+    private val TWO_DIGIT_CODES = setOf(
+        "20", "27", "30", "31", "32", "33", "34", "36", "39", "40", "41", "43", "44", "45",
+        "46", "47", "48", "49", "51", "52", "53", "54", "55", "56", "57", "58", "60", "61",
+        "62", "63", "64", "65", "66", "81", "82", "84", "86", "90", "91", "92", "93", "94",
+        "95", "98"
+    )
+
+    /** "+447480773860" → "44" */
+    fun countryCodeOf(e164: String): String? {
+        if (!e164.startsWith("+") || e164.length < 5) return null
+        val d = e164.substring(1)
+        return when {
+            d[0] == '1' || d[0] == '7' -> d.substring(0, 1)
+            d.substring(0, 2) in TWO_DIGIT_CODES -> d.substring(0, 2)
+            else -> d.substring(0, 3)
+        }
+    }
+
+    /** Préfixe de « vague » : indicatif + premier chiffre national. "+447480773860" → "+447" */
+    fun wavePrefix(e164: String): String? {
+        val cc = countryCodeOf(e164) ?: return null
+        if (e164.length < cc.length + 3) return null
+        return "+" + cc + e164[cc.length + 1]
+    }
+
+    private val ISO_TO_CODE = mapOf(
+        "FR" to "33", "CH" to "41", "BE" to "32", "LU" to "352", "MC" to "377", "DE" to "49",
+        "AT" to "43", "IT" to "39", "ES" to "34", "PT" to "351", "GB" to "44", "IE" to "353",
+        "NL" to "31", "US" to "1", "CA" to "1", "MA" to "212", "DZ" to "213", "TN" to "216",
+        "PL" to "48", "SE" to "46", "NO" to "47", "DK" to "45", "FI" to "358", "GR" to "30",
+        "RO" to "40", "TR" to "90", "IN" to "91", "BR" to "55", "MX" to "52", "AU" to "61",
+        "JP" to "81", "CN" to "86", "RE" to "262", "GP" to "590", "MQ" to "596", "GF" to "594",
+        "SN" to "221", "CI" to "225", "CM" to "237"
+    )
+
+    /** Indicatif du pays de l'utilisateur (carte SIM), si connu. */
+    fun ownCountryCode(context: Context): String? = ISO_TO_CODE[countryIso(context)]
+
     /** Garde uniquement chiffres et "+" initial ; transforme 00xx en +xx. */
     fun clean(input: String): String {
         val sb = StringBuilder()

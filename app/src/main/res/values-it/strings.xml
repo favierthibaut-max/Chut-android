@@ -42,6 +42,9 @@
     <string name="sec_history">Chiamate da numeri sconosciuti</string>
     <string name="ch_filtered">Chiamate filtrate</string>
     <string name="action_rang">ha squillato</string>
+    <string name="wave_text">%1$d numeri diversi che iniziano con %2$s ti hanno chiamato negli ultimi 30 giorni e non hai mai risposto. Sembra un\'ondata di spam.</string>
+    <string name="wave_block">Blocca tutti i %1$s…</string>
+    <string name="wave_ignore">Ignora</string>
     <string name="cl_missed">persa</string>
     <string name="cl_rejected">rifiutata</string>
     <string name="cl_answered">risposta</string>

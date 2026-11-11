@@ -42,6 +42,9 @@
     <string name="sec_history">Anrufe von unbekannten Nummern</string>
     <string name="ch_filtered">Gefilterte Anrufe</string>
     <string name="action_rang">hat geklingelt</string>
+    <string name="wave_text">%1$d verschiedene Nummern mit %2$s haben dich in den letzten 30 Tagen angerufen, und du hast nie abgenommen. Das sieht nach einer Spam-Welle aus.</string>
+    <string name="wave_block">Alle %1$s… blockieren</string>
+    <string name="wave_ignore">Ignorieren</string>
     <string name="cl_missed">verpasst</string>
     <string name="cl_rejected">abgelehnt</string>
     <string name="cl_answered">angenommen</string>

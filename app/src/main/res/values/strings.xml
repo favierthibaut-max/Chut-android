@@ -43,6 +43,9 @@
     <string name="sec_history">Calls from unknown numbers</string>
     <string name="ch_filtered">Filtered calls</string>
     <string name="action_rang">rang</string>
+    <string name="wave_text">%1$d different numbers starting with %2$s called you in the last 30 days, and you never answered any of them. It looks like a spam wave.</string>
+    <string name="wave_block">Block all %1$s…</string>
+    <string name="wave_ignore">Ignore</string>
     <string name="cl_missed">missed</string>
     <string name="cl_rejected">declined</string>
     <string name="cl_answered">answered</string>

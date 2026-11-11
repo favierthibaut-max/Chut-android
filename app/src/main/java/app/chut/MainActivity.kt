@@ -218,7 +218,10 @@ class MainActivity : Activity() {
     /** Une ligne de l'historique : un appel d'un numéro inconnu. */
     private data class CallRow(
         val time: Long, val number: String, val name: String,
-        val status: String, val reason: String, val blocked: Boolean
+        val status: String, val reason: String,
+        val blocked: Boolean,   // bloqué (par Chut ou par le téléphone)
+        val warn: Boolean,      // repéré comme indésirable (ex. appel reçu avant l'installation)
+        val answered: Boolean   // tu as décroché
     )
 
     /** L'édition « lite » ne déclare pas l'accès au journal d'appels. */
@@ -247,7 +250,7 @@ class MainActivity : Activity() {
     private fun buildRows(): List<CallRow> {
         val history = store.history()
         val fromHistory = history.take(100).map { h ->
-            CallRow(h.time, h.number, h.name, statusOf(h), h.reason, !h.rang)
+            CallRow(h.time, h.number, h.name, statusOf(h), h.reason, !h.rang, !h.rang, false)
         }
         if (!hasCallLog()) return fromHistory
 
@@ -277,7 +280,18 @@ class MainActivity : Activity() {
                     if (h != null) used += h
                     val name = h?.name?.takeIf { it.isNotEmpty() }
                         ?: ReverseLookup.peek(this, number)?.display(this).orEmpty()
-                    val reason = h?.reason ?: OnlineLookup.peek(this, number)?.label.orEmpty()
+                    // Les appels d'avant l'installation n'ont jamais été examinés : on leur applique
+                    // les règles actuelles pour montrer ceux qui seraient bloqués aujourd'hui.
+                    val local = SpamRules.evaluate(
+                        this, raw.ifEmpty { null }, hidden = raw.isEmpty(), spoofed = false, now = time
+                    )
+                    val online = OnlineLookup.peek(this, number)
+                    val reason = when {
+                        h != null -> h.reason
+                        local.block || local.definitive -> local.reason
+                        online != null -> online.label
+                        else -> ""
+                    }
                     val blockedByChut = h != null && !h.rang
                     val status = if (blockedByChut) statusOf(h!!) else getString(when (type) {
                         CallLog.Calls.MISSED_TYPE -> R.string.cl_missed
@@ -286,8 +300,10 @@ class MainActivity : Activity() {
                         CallLog.Calls.VOICEMAIL_TYPE -> R.string.cl_voicemail
                         else -> R.string.cl_answered
                     })
-                    rows += CallRow(time, number, name, status, reason,
-                        blockedByChut || type == CallLog.Calls.BLOCKED_TYPE)
+                    val blocked = blockedByChut || type == CallLog.Calls.BLOCKED_TYPE
+                    val warn = blocked || (local.block && !local.contact) || (!local.definitive && online?.spam == true)
+                    rows += CallRow(time, number, name, status, reason, blocked, warn,
+                        type == CallLog.Calls.INCOMING_TYPE)
                 }
             }
         } catch (e: Exception) {
@@ -305,6 +321,7 @@ class MainActivity : Activity() {
         findViewById<Button>(R.id.btnClear).visibility = if (callLog) View.GONE else View.VISIBLE
 
         val rows = buildRows()
+        renderWave(rows)
         if (rows.isEmpty()) {
             container.addView(row(getString(R.string.no_history), dim = true, onClick = null))
             return
@@ -315,12 +332,70 @@ class MainActivity : Activity() {
         rows.forEach { r ->
             val pretty = SpamRules.pretty(r.number, this)
             val label = if (r.name.isEmpty()) pretty else "${r.name} ($pretty)"
-            val icon = if (r.blocked) "🚫" else "📞"
+            val icon = when {
+                r.blocked -> "🚫"
+                r.warn -> "⚠️"
+                else -> "📞"
+            }
             val details = listOf(fmt.format(Date(r.time)), r.status, r.reason)
                 .filter { it.isNotEmpty() }.joinToString(" · ")
             container.addView(row("$icon $label\n$details", onClick = { callMenu(r.number) }))
         }
         if (enrich) enrich(rows)
+    }
+
+    /**
+     * Détection de vague : plusieurs numéros différents d'un même préfixe étranger
+     * (ex. +44 7…) appellent sans que tu décroches jamais → on propose de bloquer le préfixe.
+     */
+    private fun detectWave(rows: List<CallRow>): Pair<String, Int>? {
+        val since = System.currentTimeMillis() - 30L * 24 * 3600_000
+        val own = SpamRules.ownCountryCode(this)
+        val dismissed = store.dismissedWaves
+        val black = store.blacklist
+        val white = store.whitelist
+        return rows.filter { it.time >= since && it.number.startsWith("+") }
+            .groupBy { SpamRules.wavePrefix(it.number) }
+            .mapNotNull { (prefix, calls) ->
+                if (prefix == null) return@mapNotNull null
+                if (own != null && SpamRules.countryCodeOf(calls[0].number) == own) return@mapNotNull null
+                if (prefix in dismissed) return@mapNotNull null
+                if (black.any { prefix.startsWith(it) }) return@mapNotNull null
+                if (calls.any { it.answered }) return@mapNotNull null
+                if (white.any { w -> calls.any { it.number.startsWith(w) } }) return@mapNotNull null
+                val distinct = calls.map { it.number }.distinct().size
+                if (distinct >= 3) prefix to distinct else null
+            }
+            .maxByOrNull { it.second }
+    }
+
+    private fun renderWave(rows: List<CallRow>) {
+        val box = findViewById<LinearLayout>(R.id.waveBox)
+        box.removeAllViews()
+        box.setPadding(0, 0, 0, 0)
+        box.background = null
+        val (prefix, count) = detectWave(rows) ?: return
+        val pad = (12 * resources.displayMetrics.density).toInt()
+        box.setPadding(pad, pad, pad, pad)
+        box.setBackgroundColor(0x22C62828)
+        box.addView(TextView(this).apply {
+            text = "🌊 " + getString(R.string.wave_text, count, prefix)
+            textSize = 15f
+        })
+        val buttons = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        buttons.addView(Button(this).apply {
+            text = getString(R.string.wave_block, prefix)
+            setOnClickListener {
+                store.addToBlacklist(prefix)
+                toast(getString(R.string.toast_blocked, prefix))
+                refresh()
+            }
+        })
+        buttons.addView(Button(this).apply {
+            text = getString(R.string.wave_ignore)
+            setOnClickListener { store.dismissWave(prefix); refresh() }
+        })
+        box.addView(buttons)
     }
 
     private var enriching = false

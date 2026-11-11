@@ -11,8 +11,8 @@ android {
         applicationId = "app.chut"
         minSdk = 29          // Android 10 : nécessaire pour le filtrage d'appels par une app tierce
         targetSdk = 34
-        versionCode = 8
-        versionName = "1.7"
+        versionCode = 9
+        versionName = "1.8"
     }
 
     // Clé fixe pour l'installation directe (hors Play Store) : toutes les versions ont la même

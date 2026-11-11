@@ -62,9 +62,12 @@ object OnlineLookup {
                 (votes >= minVotes || confidence >= minConfidence)
 
             val kind = ratingLabel(context, rating)
+            // PhoneBlock renvoie la note « A_LEGITIMATE » par défaut pour un numéro qu'il ne connaît
+            // pas : sans aucun signalement, on dit donc « aucun signalement », pas « fiable ».
             val label = when {
-                whiteListed || rating == "A_LEGITIMATE" -> context.getString(R.string.pb_trusted)
-                votes == 0 -> context.getString(R.string.pb_none)
+                whiteListed -> context.getString(R.string.pb_trusted)
+                votes <= 0 && confidence <= 0 -> context.getString(R.string.pb_none)
+                rating == "A_LEGITIMATE" -> context.getString(R.string.pb_trusted)
                 else -> context.getString(R.string.pb_reported, votes) + (if (kind != null) " ($kind)" else "")
             }
             return Result(spam, label)
@@ -90,7 +93,7 @@ object OnlineLookup {
     // --- Cache local -------------------------------------------------------
 
     private fun cache(context: Context) =
-        context.applicationContext.getSharedPreferences("chut_lookup_cache", Context.MODE_PRIVATE)
+        context.applicationContext.getSharedPreferences("chut_lookup_cache_v2", Context.MODE_PRIVATE)
 
     private fun readCache(context: Context, e164: String): Result? {
         val raw = cache(context).getString(e164, null) ?: return null

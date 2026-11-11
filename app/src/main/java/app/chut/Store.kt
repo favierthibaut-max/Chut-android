@@ -84,6 +84,10 @@ class Store(context: Context) {
 
     fun isExpectingCall(now: Long = System.currentTimeMillis()) = now < expectingCallUntil
 
+    /** Vagues de spam (préfixes) que l'utilisateur a choisi d'ignorer. */
+    val dismissedWaves: Set<String> get() = readSet(K_WAVES).toSet()
+    fun dismissWave(prefix: String) = editSet(K_WAVES) { it.add(prefix) }
+
     // --- Listes ------------------------------------------------------------
 
     val blacklist: List<String> get() = readSet(K_BLACK)
@@ -159,6 +163,7 @@ class Store(context: Context) {
         private const val K_SEARCHCH = "searchch_key"
         private const val K_GOOGLE = "google_places_key"
         private const val K_EXPECT = "expecting_call_until"
+        private const val K_WAVES = "dismissed_waves"
         private const val K_BLACK = "blacklist"
         private const val K_WHITE = "whitelist"
         private const val K_HISTORY = "history"

@@ -42,6 +42,9 @@
     <string name="sec_history">Llamadas de números desconocidos</string>
     <string name="ch_filtered">Llamadas filtradas</string>
     <string name="action_rang">sonó</string>
+    <string name="wave_text">%1$d números distintos que empiezan por %2$s te han llamado en los últimos 30 días y no contestaste a ninguno. Parece una oleada de spam.</string>
+    <string name="wave_block">Bloquear todos los %1$s…</string>
+    <string name="wave_ignore">Ignorar</string>
     <string name="cl_missed">perdida</string>
     <string name="cl_rejected">rechazada</string>
     <string name="cl_answered">contestada</string>

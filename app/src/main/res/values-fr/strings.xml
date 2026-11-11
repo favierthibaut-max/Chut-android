@@ -42,6 +42,9 @@
     <string name="sec_history">Appels de numéros inconnus</string>
     <string name="ch_filtered">Appels filtrés</string>
     <string name="action_rang">a sonné</string>
+    <string name="wave_text">%1$d numéros différents commençant par %2$s t\'ont appelé ces 30 derniers jours, et tu n\'as décroché à aucun. Ça ressemble à une vague de spam.</string>
+    <string name="wave_block">Bloquer tous les %1$s…</string>
+    <string name="wave_ignore">Ignorer</string>
     <string name="cl_missed">manqué</string>
     <string name="cl_rejected">refusé</string>
     <string name="cl_answered">décroché</string>
