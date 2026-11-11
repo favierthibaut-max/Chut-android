@@ -42,7 +42,12 @@
     <string name="sec_history">Llamadas de números desconocidos</string>
     <string name="ch_filtered">Llamadas filtradas</string>
     <string name="action_rang">sonó</string>
-    <string name="hint_history">Todas las llamadas de números que no están en tus contactos, bloqueadas o no. Toca una llamada para ver opciones.</string>
+    <string name="cl_missed">perdida</string>
+    <string name="cl_rejected">rechazada</string>
+    <string name="cl_answered">contestada</string>
+    <string name="cl_voicemail">buzón de voz</string>
+    <string name="btn_calllog">Mostrar también llamadas anteriores (acceso al registro de llamadas)</string>
+    <string name="hint_history">Llamadas de números que no están en tus contactos, bloqueadas o no. Toca una llamada para ver opciones.</string>
     <string name="clear">Borrar</string>
     <string name="key_saved">Clave guardada</string>
     <string name="key_removed">Clave eliminada</string>

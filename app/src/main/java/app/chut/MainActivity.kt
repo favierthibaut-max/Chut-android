@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.CallLog
 import android.text.format.DateFormat
 import android.util.TypedValue
 import android.view.View
@@ -21,6 +22,7 @@ import android.widget.Toast
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 
 class MainActivity : Activity() {
 
@@ -74,6 +76,9 @@ class MainActivity : Activity() {
 
         findViewById<Button>(R.id.btnActivate).setOnClickListener { requestScreeningRole() }
         findViewById<Button>(R.id.btnPermissions).setOnClickListener { requestMissingPermissions() }
+        findViewById<Button>(R.id.btnCallLog).setOnClickListener {
+            requestPermissions(arrayOf(Manifest.permission.READ_CALL_LOG), REQ_PERMS)
+        }
 
         findViewById<Button>(R.id.btnAddBlack).setOnClickListener {
             addEntry(R.id.etBlack) { store.addToBlacklist(it) }
@@ -181,7 +186,7 @@ class MainActivity : Activity() {
         renderList(R.id.listWhite, store.whitelist) { entry ->
             confirm(getString(R.string.remove_white_q, entry)) { store.removeFromWhitelist(entry) }
         }
-        renderHistory()
+        renderHistory(enrich = true)
     }
 
     // ---------------------------------------------------------------- Listes
@@ -210,34 +215,130 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun renderHistory() {
+    /** Une ligne de l'historique : un appel d'un numéro inconnu. */
+    private data class CallRow(
+        val time: Long, val number: String, val name: String,
+        val status: String, val reason: String, val blocked: Boolean
+    )
+
+    private fun hasCallLog() =
+        checkSelfPermission(Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
+
+    private fun statusOf(h: HistoryEntry) = getString(when {
+        h.rang -> R.string.action_rang
+        h.silenced -> R.string.action_silenced
+        else -> R.string.action_blocked
+    })
+
+    /**
+     * Avec l'accès au journal d'appels : tous les appels reçus de numéros inconnus, y compris
+     * avant l'installation, complétés par ce que Chut sait (raison du blocage, nom trouvé).
+     * Sans : seulement ce que Chut a vu passer depuis son installation.
+     */
+    private fun buildRows(): List<CallRow> {
+        val history = store.history()
+        val fromHistory = history.take(100).map { h ->
+            CallRow(h.time, h.number, h.name, statusOf(h), h.reason, !h.rang)
+        }
+        if (!hasCallLog()) return fromHistory
+
+        val iso = SpamRules.countryIso(this)
+        val rows = mutableListOf<CallRow>()
+        val used = HashSet<HistoryEntry>()
+        try {
+            contentResolver.query(
+                CallLog.Calls.CONTENT_URI,
+                arrayOf(
+                    CallLog.Calls.NUMBER, CallLog.Calls.DATE, CallLog.Calls.TYPE,
+                    CallLog.Calls.CACHED_NAME, CallLog.Calls.NUMBER_PRESENTATION
+                ),
+                null, null, CallLog.Calls.DATE + " DESC"
+            )?.use { c ->
+                while (c.moveToNext() && rows.size < 100) {
+                    val type = c.getInt(2)
+                    if (type == CallLog.Calls.OUTGOING_TYPE) continue
+                    if (!c.getString(3).isNullOrBlank()) continue // contact : déjà identifié
+                    val raw = if (c.getInt(4) == CallLog.Calls.PRESENTATION_ALLOWED)
+                        SpamRules.clean(c.getString(0).orEmpty()) else ""
+                    val number = SpamRules.toE164(raw, iso)
+                    val time = c.getLong(1)
+                    val h = history.firstOrNull {
+                        it !in used && it.number == number && abs(it.time - time) < 120_000
+                    }
+                    if (h != null) used += h
+                    val name = h?.name?.takeIf { it.isNotEmpty() }
+                        ?: ReverseLookup.peek(this, number)?.display(this).orEmpty()
+                    val reason = h?.reason ?: OnlineLookup.peek(this, number)?.label.orEmpty()
+                    val blockedByChut = h != null && !h.rang
+                    val status = if (blockedByChut) statusOf(h!!) else getString(when (type) {
+                        CallLog.Calls.MISSED_TYPE -> R.string.cl_missed
+                        CallLog.Calls.REJECTED_TYPE -> R.string.cl_rejected
+                        CallLog.Calls.BLOCKED_TYPE -> R.string.action_blocked
+                        CallLog.Calls.VOICEMAIL_TYPE -> R.string.cl_voicemail
+                        else -> R.string.cl_answered
+                    })
+                    rows += CallRow(time, number, name, status, reason,
+                        blockedByChut || type == CallLog.Calls.BLOCKED_TYPE)
+                }
+            }
+        } catch (e: Exception) {
+            return fromHistory
+        }
+        return rows
+    }
+
+    private fun renderHistory(enrich: Boolean) {
         val container = findViewById<LinearLayout>(R.id.listHistory)
         container.removeAllViews()
-        val items = store.history().take(50)
-        if (items.isEmpty()) {
+        val callLog = hasCallLog()
+        findViewById<Button>(R.id.btnCallLog).visibility = if (callLog) View.GONE else View.VISIBLE
+        findViewById<Button>(R.id.btnClear).visibility = if (callLog) View.GONE else View.VISIBLE
+
+        val rows = buildRows()
+        if (rows.isEmpty()) {
             container.addView(row(getString(R.string.no_history), dim = true, onClick = null))
             return
         }
         val fmt = SimpleDateFormat(
             DateFormat.getBestDateTimePattern(Locale.getDefault(), "EEEdMMMjjmm"), Locale.getDefault()
         )
-        items.forEach { h ->
-            val label = if (h.name.isEmpty()) SpamRules.pretty(h.number, this)
-            else "${h.name} (${SpamRules.pretty(h.number, this)})"
-            val action = getString(when {
-                h.rang -> R.string.action_rang
-                h.silenced -> R.string.action_silenced
-                else -> R.string.action_blocked
-            })
-            val icon = if (h.rang) "📞" else "🚫"
-            val text = "$icon $label\n${fmt.format(Date(h.time))} · $action · ${h.reason}"
-            container.addView(row(text, onClick = { historyMenu(h) }))
+        rows.forEach { r ->
+            val pretty = SpamRules.pretty(r.number, this)
+            val label = if (r.name.isEmpty()) pretty else "${r.name} ($pretty)"
+            val icon = if (r.blocked) "🚫" else "📞"
+            val details = listOf(fmt.format(Date(r.time)), r.status, r.reason)
+                .filter { it.isNotEmpty() }.joinToString(" · ")
+            container.addView(row("$icon $label\n$details", onClick = { callMenu(r.number) }))
         }
+        if (enrich) enrich(rows)
     }
 
-    private fun historyMenu(h: HistoryEntry) {
-        if (h.number.isEmpty()) return
-        val label = SpamRules.pretty(h.number, this)
+    private var enriching = false
+
+    /** Interroge PhoneBlock et les annuaires pour les numéros pas encore connus, puis réaffiche. */
+    private fun enrich(rows: List<CallRow>) {
+        if (enriching) return
+        val todo = rows.map { it.number }.filter { it.startsWith("+") }.distinct().filter {
+            (store.onlineLookup && OnlineLookup.peek(this, it) == null) ||
+                (ReverseLookup.supports(this, it) && !ReverseLookup.isCached(this, it))
+        }.take(25)
+        if (todo.isEmpty()) return
+        enriching = true
+        Thread {
+            todo.forEach { n ->
+                if (store.onlineLookup) OnlineLookup.check(this, n, timeoutMs = 5000)
+                ReverseLookup.identify(this, n, timeoutMs = 5000)
+            }
+            runOnUiThread {
+                enriching = false
+                if (!isFinishing) renderHistory(enrich = false)
+            }
+        }.start()
+    }
+
+    private fun callMenu(number: String) {
+        if (number.isEmpty()) return
+        val label = SpamRules.pretty(number, this)
         AlertDialog.Builder(this)
             .setTitle(label)
             .setItems(arrayOf(
@@ -245,10 +346,10 @@ class MainActivity : Activity() {
                 getString(R.string.call_back), getString(R.string.menu_who)
             )) { _, which ->
                 when (which) {
-                    0 -> { store.addToWhitelist(h.number); toast(getString(R.string.toast_allowed, label)) }
-                    1 -> { store.addToBlacklist(h.number); toast(getString(R.string.toast_blocked, label)) }
-                    2 -> startActivity(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", h.number, null)))
-                    3 -> startActivity(Intent(Intent.ACTION_VIEW, ReverseLookup.webSearchUri(this, h.number)))
+                    0 -> { store.addToWhitelist(number); toast(getString(R.string.toast_allowed, label)) }
+                    1 -> { store.addToBlacklist(number); toast(getString(R.string.toast_blocked, label)) }
+                    2 -> startActivity(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null)))
+                    3 -> startActivity(Intent(Intent.ACTION_VIEW, ReverseLookup.webSearchUri(this, number)))
                 }
                 refresh()
             }

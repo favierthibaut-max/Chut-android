@@ -42,7 +42,12 @@
     <string name="sec_history">Appels de numéros inconnus</string>
     <string name="ch_filtered">Appels filtrés</string>
     <string name="action_rang">a sonné</string>
-    <string name="hint_history">Tous les appels de numéros absents de tes contacts, bloqués ou non. Touche un appel pour les options.</string>
+    <string name="cl_missed">manqué</string>
+    <string name="cl_rejected">refusé</string>
+    <string name="cl_answered">décroché</string>
+    <string name="cl_voicemail">messagerie</string>
+    <string name="btn_calllog">Afficher aussi les appels plus anciens (accès au journal d\'appels)</string>
+    <string name="hint_history">Les appels de numéros absents de tes contacts, bloqués ou non. Touche un appel pour les options.</string>
     <string name="clear">Effacer</string>
     <string name="key_saved">Clé enregistrée</string>
     <string name="key_removed">Clé supprimée</string>

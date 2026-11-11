@@ -43,7 +43,12 @@
     <string name="sec_history">Calls from unknown numbers</string>
     <string name="ch_filtered">Filtered calls</string>
     <string name="action_rang">rang</string>
-    <string name="hint_history">Every call from a number that isn\'t in your contacts, blocked or not. Tap a call for options.</string>
+    <string name="cl_missed">missed</string>
+    <string name="cl_rejected">declined</string>
+    <string name="cl_answered">answered</string>
+    <string name="cl_voicemail">voicemail</string>
+    <string name="btn_calllog">Also show earlier calls (call log access)</string>
+    <string name="hint_history">Calls from numbers that aren\'t in your contacts, blocked or not. Tap a call for options.</string>
     <string name="clear">Clear</string>
     <string name="key_saved">Key saved</string>
     <string name="key_removed">Key removed</string>

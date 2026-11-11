@@ -42,7 +42,12 @@
     <string name="sec_history">Chiamate da numeri sconosciuti</string>
     <string name="ch_filtered">Chiamate filtrate</string>
     <string name="action_rang">ha squillato</string>
-    <string name="hint_history">Tutte le chiamate da numeri non presenti nei tuoi contatti, bloccate o no. Tocca una chiamata per le opzioni.</string>
+    <string name="cl_missed">persa</string>
+    <string name="cl_rejected">rifiutata</string>
+    <string name="cl_answered">risposta</string>
+    <string name="cl_voicemail">segreteria</string>
+    <string name="btn_calllog">Mostra anche le chiamate precedenti (accesso al registro chiamate)</string>
+    <string name="hint_history">Chiamate da numeri non presenti nei tuoi contatti, bloccate o no. Tocca una chiamata per le opzioni.</string>
     <string name="clear">Cancella</string>
     <string name="key_saved">Chiave salvata</string>
     <string name="key_removed">Chiave rimossa</string>

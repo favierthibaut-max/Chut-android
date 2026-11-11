@@ -42,7 +42,12 @@
     <string name="sec_history">Anrufe von unbekannten Nummern</string>
     <string name="ch_filtered">Gefilterte Anrufe</string>
     <string name="action_rang">hat geklingelt</string>
-    <string name="hint_history">Alle Anrufe von Nummern, die nicht in deinen Kontakten sind, blockiert oder nicht. Tippe auf einen Anruf für Optionen.</string>
+    <string name="cl_missed">verpasst</string>
+    <string name="cl_rejected">abgelehnt</string>
+    <string name="cl_answered">angenommen</string>
+    <string name="cl_voicemail">Mailbox</string>
+    <string name="btn_calllog">Auch frühere Anrufe anzeigen (Zugriff auf die Anrufliste)</string>
+    <string name="hint_history">Anrufe von Nummern, die nicht in deinen Kontakten sind, blockiert oder nicht. Tippe auf einen Anruf für Optionen.</string>
     <string name="clear">Löschen</string>
     <string name="key_saved">Schlüssel gespeichert</string>
     <string name="key_removed">Schlüssel entfernt</string>

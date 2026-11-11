@@ -310,6 +310,12 @@
             style="@style/Hint"
             android:text="@string/hint_history" />
 
+        <Button
+            android:id="@+id/btnCallLog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_calllog" />
+
         <LinearLayout
             android:id="@+id/listHistory"
             android:layout_width="match_parent"

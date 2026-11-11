@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Pour ne jamais filtrer un numéro enregistré dans tes contacts -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <!-- Pour afficher aussi les appels reçus avant l'installation (usage autorisé : identification et anti-spam) -->
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
 
     <application
         android:allowBackup="true"

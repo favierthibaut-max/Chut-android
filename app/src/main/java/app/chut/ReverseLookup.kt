@@ -195,6 +195,12 @@ object ReverseLookup {
     private fun searchChLang(): String =
         Locale.getDefault().language.takeIf { it in setOf("de", "fr", "it", "en") } ?: "en"
 
+    /** Nom déjà connu (cache), sans aucune requête réseau. */
+    fun peek(context: Context, e164: String): Identity? = readCache(context, e164)?.second
+
+    /** Le cache a-t-il déjà une réponse (même « inconnu ») pour ce numéro ? */
+    fun isCached(context: Context, e164: String): Boolean = readCache(context, e164) != null
+
     // --- Cache local -------------------------------------------------------
 
     private fun cache(context: Context) =

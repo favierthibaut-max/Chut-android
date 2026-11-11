@@ -83,6 +83,10 @@ object OnlineLookup {
         else -> null
     }?.let { context.getString(it) }
 
+    /** Résultat déjà connu (cache), sans aucune requête réseau. */
+    fun peek(context: Context, e164: String): Result? =
+        if (e164.startsWith("+")) readCache(context, e164) else null
+
     // --- Cache local -------------------------------------------------------
 
     private fun cache(context: Context) =
